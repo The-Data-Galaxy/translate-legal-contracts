@@ -61,16 +61,35 @@ def english_paragraph(source, text, styles=None):
     p = E.Element(W+'p')
     old = source.find('w:pPr', NS)
     pp = deepcopy(old) if old is not None else E.Element(W+'pPr')
-    for tag in ('pStyle', 'numPr', 'outlineLvl', 'sectPr', 'pageBreakBefore', 'rPr'):
+    in_margin = any(a.tag in (W+'hdr', W+'ftr') for a in source.iterancestors())
+    removed = ('numPr', 'outlineLvl', 'sectPr', 'pageBreakBefore', 'rPr')
+    for tag in removed + (() if in_margin else ('pStyle',)):
         for el in pp.findall('w:'+tag, NS):
             pp.remove(el)
     np = E.Element(W+'numPr')
     E.SubElement(np, W+'numId', {W+'val':'0'})
-    early = {W+t for t in ('keepNext','keepLines','framePr','widowControl')}
+    early = {W+t for t in ('pStyle','keepNext','keepLines','framePr','widowControl')}
     pp.insert(next((i for i,e in enumerate(pp) if e.tag not in early),len(pp)),np)
     outline = E.Element(W+'outlineLvl',{W+'val':'9'})
     late = {W+t for t in ('divId','cnfStyle','rPr','sectPr','pPrChange')}
     pp.insert(next((i for i,e in enumerate(pp) if e.tag in late),len(pp)),outline)
+    if in_margin:
+        # A removed Footer style otherwise falls back to the body's exact line
+        # height/grid. Give the added 11pt line independent, compact metrics.
+        spacing = pp.find('w:spacing', NS)
+        if spacing is None:
+            spacing = E.Element(W+'spacing')
+            following = {W+t for t in ('ind','contextualSpacing','mirrorIndents',
+                'suppressOverlap','jc','textDirection','textAlignment',
+                'textboxTightWrap','outlineLvl','divId','cnfStyle','pPrChange')}
+            pp.insert(next((i for i,e in enumerate(pp) if e.tag in following),len(pp)),spacing)
+        spacing.attrib.clear()
+        spacing.attrib.update({W+'before':'0', W+'after':'0', W+'line':'240', W+'lineRule':'auto'})
+        grid = pp.find('w:snapToGrid', NS)
+        if grid is None:
+            grid = E.Element(W+'snapToGrid')
+            pp.insert(list(pp).index(spacing), grid)
+        grid.set(W+'val', '0')
     if any(a.tag == W+'tc' for a in source.iterancestors()):
         jc = pp.find('w:jc', NS)
         if jc is None:
@@ -131,6 +150,58 @@ def page_field_paragraph(source, item, styles):
     return target
 
 
+def starts_new_page(start):
+    """Reuse an explicit source page boundary instead of stacking hard breaks."""
+    if on_off(start.find('w:pPr/w:pageBreakBefore', NS), False):
+        return True
+    previous = start.getprevious()
+    if previous is None:
+        return True
+    if previous.tag != W+'p':
+        return False
+    content = [e for e in previous.iter() if e.tag in
+        {W+t for t in ('t','br','cr','tab','drawing','pict','object','fldChar','fldSimple','sym')}]
+    return bool(content) and all(e.tag == W+'br' and e.get(W+'type') == 'page' for e in content)
+
+
+def apply_page_break_plan(root, source_nodes, plan):
+    """Apply explicitly approved flow across a standalone source page break."""
+    items = plan.get('page_breaks', [])
+    if not isinstance(items, list) or not all(isinstance(x, dict) for x in items):
+        raise ValueError('page_breaks must be a list of layout objects')
+    body = root.find('w:body', NS)
+    pending, seen = [], set()
+    for item in items:
+        anchor = item.get('before')
+        if not isinstance(anchor, str) or anchor in seen:
+            raise ValueError('Invalid or duplicate page-break anchor')
+        seen.add(anchor)
+        if item.get('policy') != 'allow_flow' or not str(item.get('reason', '')).strip():
+            raise ValueError('Page-break flow needs policy=allow_flow and an explicit reason')
+        start = source_nodes.get(anchor)
+        if start is None or start.getparent() is not body:
+            raise ValueError('Page-break anchor must be a top-level source paragraph')
+        if on_off(start.find('w:pPr/w:pageBreakBefore', NS), False):
+            raise ValueError('Page-break flow does not alter paragraph pageBreakBefore')
+        previous = start.getprevious()
+        if previous is None or previous.tag != W+'p':
+            raise ValueError('Page-break flow needs an immediately preceding standalone page break')
+        content = [e for e in previous.iter() if e is not previous and
+            e.tag not in (W+'r', W+'pPr', W+'rPr') and
+            not any(a.tag in (W+'pPr', W+'rPr') for a in e.iterancestors())]
+        if (len(content) != 1 or content[0].tag != W+'br' or
+                content[0].get(W+'type') != 'page' or
+                previous.find('.//w:sectPr', NS) is not None or
+                any(previous is node for node in source_nodes.values())):
+            raise ValueError('Only a single standalone page break without content, bookmarks or section properties may flow')
+        if any(x.get('policy') == 'new_page_block' and x.get('start_before') == anchor
+               for x in plan.get('tables', [])):
+            raise ValueError('Conflicting page-break and table layout policies')
+        pending.append(previous)
+    for paragraph in pending:
+        body.remove(paragraph)
+
+
 def apply_table_plan(root, source_nodes, plan):
     body = root.find('w:body',NS)
     tables = body.findall('w:tbl',NS)
@@ -138,6 +209,7 @@ def apply_table_plan(root, source_nodes, plan):
     items = plan.get('tables',[])
     if not isinstance(items,list) or not all(isinstance(x,dict) for x in items):
         raise ValueError('tables must be a list of layout objects')
+    apply_page_break_plan(root, source_nodes, plan)
     for item in items:
         index = item['table_index']
         if not isinstance(index,int) or index < 0 or index >= len(tables) or index in seen:
@@ -157,6 +229,8 @@ def apply_table_plan(root, source_nodes, plan):
             siblings = list(body)
             if not 0 < siblings.index(table)-siblings.index(start) <= 12:
                 raise ValueError('Block start must precede the selected table nearby')
+            if starts_new_page(start):
+                continue
             br = E.Element(W+'p')
             ident = max((int(x.get(W+'id')) for x in root.findall('.//w:bookmarkStart',NS)
                          if (x.get(W+'id') or '').isdigit()),default=0)+1

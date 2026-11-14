@@ -1,4 +1,4 @@
-"""Six compact behavior groups for the published formatting/composition path."""
+"""Compact behavior groups for the formal formatting/composition path."""
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -41,13 +41,13 @@ class LayoutRegression(unittest.TestCase):
 
     def test_03_short_block_uses_selected_anchor_not_text(self):
         for title in ('Receiving details','Other small business block'):
-            root=xml('<w:document><w:body><w:p><w:r><w:t>'+title+'</w:t></w:r></w:p><w:p><w:r><w:t>Introduction</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>')[0]
-            p=root.find('w:body/w:p',m.NS)
+            root=xml('<w:document><w:body><w:p/><w:p><w:r><w:t>'+title+'</w:t></w:r></w:p><w:p><w:r><w:t>Introduction</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>')[0]
+            p=root.findall('w:body/w:p',m.NS)[1]
             original=m.E.tostring(p)
             m.layout.apply_table_plan(root,{'anchor':p},{'tables':[{'table_index':0,'policy':'new_page_block','start_before':'anchor','reason':'Keep a critical short business block together'}]})
             body=root.find('w:body',m.NS)
-            self.assertIs(body[1],p)
-            self.assertIsNotNone(body[0].find('w:r/w:br[@w:type="page"]',m.NS))
+            self.assertIs(body[2],p)
+            self.assertIsNotNone(body[1].find('w:r/w:br[@w:type="page"]',m.NS))
             self.assertEqual(m.E.tostring(p),original)
             self.assertEqual(''.join(root.itertext()),title+'IntroductionCell')
 
@@ -91,6 +91,52 @@ class LayoutRegression(unittest.TestCase):
             mapping.write_text(json.dumps(doc));plan.write_text(json.dumps({'source_sha256':doc['source_sha256'],'tables':[]}))
             with self.assertRaisesRegex(ValueError,'outside headers/footers'):m.compose(source,mapping,out,manifest,plan)
             with self.assertRaisesRegex(ValueError,'Complex Word features'):m.build(source,mapping,out,manifest)
+
+    def test_07_footer_has_independent_line_metrics_and_preserves_source(self):
+        root=xml('<w:ftr><w:p><w:pPr><w:pStyle w:val="Footer"/><w:spacing w:line="400" w:lineRule="exact" w:before="180" w:after="180"/><w:jc w:val="center"/></w:pPr><w:r><w:t>第 </w:t></w:r><w:fldSimple w:instr="PAGE"><w:r><w:t>1</w:t></w:r></w:fldSimple></w:p></w:ftr>')[0]
+        source=root[0];before=m.E.tostring(source)
+        target=m.layout.page_field_paragraph(source,{'translation':'Page ','field_template':'Page {PAGE}'},{})
+        self.assertEqual(m.value(target,'w:pPr/w:pStyle'),'Footer')
+        spacing=target.find('w:pPr/w:spacing',m.NS)
+        self.assertEqual(dict(spacing.attrib),{m.W+'before':'0',m.W+'after':'0',m.W+'line':'240',m.W+'lineRule':'auto'})
+        self.assertEqual(m.value(target,'w:pPr/w:snapToGrid'),'0')
+        self.assertEqual(m.value(target,'w:pPr/w:jc'),'center')
+        self.assertEqual(m.layout.field_codes(target),['PAGE'])
+        self.assertTrue(all(m.value(r,'w:rPr/w:sz')=='22' for r in target.findall('.//w:r',m.NS)))
+        self.assertEqual(m.E.tostring(source),before)
+
+    def test_08_existing_source_page_boundary_is_not_duplicated(self):
+        cases=[('', '', 0), ('<w:p><w:r><w:br w:type="page"/></w:r></w:p>', '', 1),
+            ('<w:p/>','<w:pageBreakBefore/>',0),
+            ('<w:p/>','<w:pageBreakBefore w:val="0"/>',1),
+            ('<w:p><w:r><w:br/></w:r></w:p>','',1)]
+        for prefix,prop,count in cases:
+            with self.subTest(prefix=prefix,prop=prop):
+                root=xml('<w:document><w:body>'+prefix+'<w:p><w:pPr>'+prop+'</w:pPr><w:r><w:t>Signature</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl></w:body></w:document>')[0]
+                p=root.findall('w:body/w:p',m.NS)[-1];before=m.E.tostring(p)
+                m.layout.apply_table_plan(root,{'start':p},{'tables':[{'table_index':0,'policy':'new_page_block','start_before':'start','reason':'A short semantic block'}]})
+                self.assertEqual(len(root.findall('.//w:br[@w:type="page"]',m.NS)),count)
+                self.assertEqual(m.E.tostring(p),before)
+
+    def test_09_audit_rejects_post_compose_layout_patches_and_reads_legacy(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'source.docx';mapping=root/'map.json';out=root/'out.docx';manifest=root/'manifest.json'
+            package(source);doc=m.inspect(source)[2]['translation_template'];doc['blocks'][0]['translation']='Party A shall pay 100.'
+            mapping.write_text(json.dumps(doc));m.build(source,mapping,out,manifest)
+            self.assertTrue(m.audit(out,manifest)['structural_pass'])
+            original=out.read_bytes();saved=json.loads(manifest.read_text())
+            def patch(blob,kind):
+                tree=m.parse(blob);body=tree.find('w:body',m.NS)
+                if kind=='spacing':m.E.SubElement(body[1].find('w:pPr',m.NS),m.W+'spacing',{m.W+'after':'60'})
+                else:m.E.SubElement(m.E.SubElement(m.E.SubElement(body,m.W+'p'),m.W+'r'),m.W+'br',{m.W+'type':'page'})
+                return m.E.tostring(tree)
+            for kind in ('spacing','break'):
+                out.write_bytes(original);mutate(out,'word/document.xml',lambda b:patch(b,kind))
+                result=m.audit(out,manifest)
+                self.assertFalse(result['structural_pass'])
+                self.assertTrue(any('Generated layout changed' in e for e in result['errors']))
+            out.write_bytes(original);saved.pop('generated_layout_sha256');manifest.write_text(json.dumps(saved))
+            self.assertTrue(m.audit(out,manifest)['structural_pass'],'schema 1 historical manifest remains readable')
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

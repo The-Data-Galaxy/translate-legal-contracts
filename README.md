@@ -4,7 +4,15 @@
 
 收到一份英文合同，想对照中文理解条款；或者要把中文协议发给境外客户，双方需要逐条确认内容。这套工具帮助你完成合同翻译，并把原文和译文整理在同一份 Word 中，方便继续审阅和修改。
 
-[下载使用](https://github.com/The-Data-Galaxy/translate-legal-contracts/releases/tag/v0.1.2) · [看看做出来的双语稿](docs/demo/bilingual.docx)
+[下载使用](https://github.com/The-Data-Galaxy/translate-legal-contracts/releases/tag/v0.1.3) · [看看做出来的双语稿](docs/demo/bilingual.docx)
+
+## 本次更新
+
+v0.1.3把制作、检查和排版修正接入同一执行流程：先检查文档结构，再生成页图核对；发现断表时保留译文，只调整布局。检查过程记录次数，相同版本复用已有结果，达到已批准范围即停止并说明未完成项。
+
+已在WorkBuddy用一份真实猎头合同新建对话、提交一段业务要求复测：21页双语Word，两次渲染、成品补丁0。真实合同不公开。该宿主另有Python文件代理兼容问题，测试中自行调整了单次命令环境；这不是Skill通用操作建议，也不代表所有软件环境均已验证。
+
+[从SkillHub获取](https://skillhub.cn/skills/user_00aaeaf9/zhulingfeng-contract-bilingual-translation) · [本版验证范围](benchmark/README.md)
 
 ## 什么时候用得上
 

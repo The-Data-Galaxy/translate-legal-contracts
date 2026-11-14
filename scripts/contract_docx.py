@@ -83,6 +83,20 @@ def ppr_hash(p):
     return digest(E.tostring(pp, method='c14n') if pp is not None else b'')
 
 
+def layout_hash(roots):
+    """Snapshot generated paragraph/break/table layout, not unrelated font styles."""
+    snapshot = []
+    for part, root in sorted(roots.items()):
+        for element in root.iter():
+            tag = element.tag.rsplit('}', 1)[-1]
+            if tag == 'p':
+                snapshot.append((part, tag, ppr_hash(element),
+                    [dict(e.attrib) for e in element.findall('.//w:br', NS)]))
+            elif tag in ('tblPr', 'trPr', 'tcPr'):
+                snapshot.append((part, tag, E.tostring(element, method='c14n').decode()))
+    return digest(json.dumps(snapshot, ensure_ascii=False, sort_keys=True).encode())
+
+
 def load_package(path):
     with ZipFile(path) as z:
         return {n: z.read(n) for n in z.namelist()}
@@ -331,6 +345,7 @@ def _build(source, translations, output, manifest_path, plan=None, plan_path=Non
     manifest = {'schema_version': 1, 'direction': 'to-english',
                 'source_sha256': info['source_sha256'], 'blocks': entries,
                 'numbering_sha256': digest(pkg.get('word/numbering.xml', b'')),
+                'generated_layout_sha256': layout_hash(roots),
                 'semantic_review': 'required', 'visual_review': 'required'}
     write_json(manifest_path, manifest)
     return {'output': str(Path(output).resolve()), 'translated': sum(
@@ -352,6 +367,9 @@ def audit(path, manifest_path):
                 if name.startswith(('stcSrc_', 'stcDst_')):
                     found.setdefault(name, []).append((part, p))
     errors, warnings, retained = [], [], []
+    if (manifest.get('generated_layout_sha256') is not None and
+            layout_hash(roots) != manifest['generated_layout_sha256']):
+        errors.append('Generated layout changed after composition; regenerate through the formal input plan')
     if digest(pkg.get('word/numbering.xml', b'')) != manifest['numbering_sha256']:
         errors.append('Original numbering definitions changed')
     for b in manifest['blocks']:

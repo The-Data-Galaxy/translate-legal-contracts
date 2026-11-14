@@ -1,5 +1,7 @@
 # 命令行辅助工具
 
+v0.1.3普通宿主任务优先用[统一执行入口](../references/execution.md)完成生成、audit、受预算控制渲染和逐页检查记录；下文build/compose/audit保留为底层接口及回归用法，不管理渲染次数。
+
 本页面向希望单独运行Python工具的使用者。[用户入口与完整旅程](../README.md)。辅助工具不调用模型，译文需先由Agent或使用者填写。
 
 ## 能力边界
@@ -16,7 +18,7 @@
 
 ## 安装与调用补充
 
-下载发布包后，将整个`translate-legal-contracts`文件夹放入宿主支持的Skill目录。Codex常用目录为`~/.codex/skills/translate-legal-contracts/`；已有同名目录时先确认版本，不直接合并覆盖。本版本尚未进行宿主安装/发现验证，其他宿主的安装方式及配置字段支持需分别核实。
+下载发布包后，将整个`translate-legal-contracts`文件夹放入宿主支持的Skill目录。Codex常用目录为`~/.codex/skills/translate-legal-contracts/`；已有同名目录时先确认版本，不直接合并覆盖。本版隔离候选已在macOS WorkBuddy通过技能菜单调用；其他宿主的安装与配置需分别核实。统一执行入口使用Unix文件锁，支持macOS/Linux；Windows原生尚未支持此入口。
 
 示例请求：
 

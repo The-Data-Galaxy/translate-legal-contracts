@@ -1,5 +1,5 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "copyright": "Copyright (C) 2026 朱玲凤",
   "scope": "Separate licenses by file; not a choice of license for each file. See LICENSE.",
   "files": {
@@ -43,7 +43,11 @@
     "scripts/contract_docx.py": "Apache-2.0",
     "scripts/word_layout.py": "Apache-2.0",
     "tests/test_contract_docx.py": "Apache-2.0",
-    "tests/test_word_layout.py": "Apache-2.0"
+    "tests/test_word_layout.py": "Apache-2.0",
+    "scripts/contract_run.py": "Apache-2.0",
+    "tests/test_contract_run.py": "Apache-2.0",
+    "tests/test_page_break_plan.py": "Apache-2.0",
+    "references/execution.md": "CC-BY-4.0"
   },
   "standard_license_texts": {
     "LICENSES/Apache-2.0.txt": "https://www.apache.org/licenses/LICENSE-2.0.txt",
