@@ -1,0 +1,13 @@
+interface:
+  display_name: 合同双语翻译
+  short_description: 准确翻译中英文合同，保留自动编号、目录和条款对应关系，核查英文十一号字及交付格式
+  default_prompt: 请使用 $translate-legal-contracts 将这份合同制作成中英文对照 Word，准确翻译，保留目录和所有条款编号，英文使用11号字，并完成内容与版式核查。
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

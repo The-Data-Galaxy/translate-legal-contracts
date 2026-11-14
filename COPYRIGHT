@@ -1,0 +1,14 @@
+Copyright (C) 2026 朱玲凤
+
+SPDX-License-Identifier: AGPL-3.0-only
+
+This project is licensed under the GNU Affero General Public License,
+version 3. See LICENSE for the complete terms.
+
+assets/icon.svg was newly drawn for this project on 2026-11-13 using
+simple SVG paths. It replaces the source package's unverified icon and
+is included under the same license. The old icon remains only in the
+private source archive and is not included in this candidate.
+
+Private contract inputs and acceptance evidence outside this Skill
+directory are not part of the public distribution or this license grant.
