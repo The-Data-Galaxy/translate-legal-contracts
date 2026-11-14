@@ -1,0 +1,54 @@
+{
+  "fictional_data": true,
+  "blocks": 14,
+  "tables": 1,
+  "source_sha256": "67a547c9a296b7118ff53dfcb054804f0b0866df36bc8ab264315b998f05547b",
+  "output_sha256": "ccbd496c3f3db22b919515068c7d1aafae6a88336f1eb8b5e615d1eb35aea4d8",
+  "source_unchanged": true,
+  "structural_pass": true,
+  "warnings": [],
+  "output_patches": 0,
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "scripts/contract_docx.py",
+        "inspect",
+        "source.docx",
+        "--out",
+        "inventory.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/contract_docx.py",
+        "compose",
+        "source.docx",
+        "--translations",
+        "translations.json",
+        "--layout-plan",
+        "layout-plan.json",
+        "--out",
+        "bilingual.docx",
+        "--manifest",
+        "alignment.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/contract_docx.py",
+        "audit",
+        "bilingual.docx",
+        "--manifest",
+        "alignment.json",
+        "--out",
+        "audit.json"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

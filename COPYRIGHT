@@ -1,14 +1,18 @@
 Copyright (C) 2026 朱玲凤
 
-SPDX-License-Identifier: AGPL-3.0-only
+Project: Contract Bilingual Translation Skill
+Source: https://github.com/The-Data-Galaxy/translate-legal-contracts
 
-This project is licensed under the GNU Affero General Public License,
-version 3. See LICENSE for the complete terms.
+Text, documentation, SVG and public fictional demonstration material:
+SPDX-License-Identifier: CC-BY-4.0
 
-assets/icon.svg was newly drawn for this project on 2026-11-13 using
-simple SVG paths. It replaces the source package's unverified icon and
-is included under the same license. The old icon remains only in the
-private source archive and is not included in this candidate.
+Code and machine configuration:
+SPDX-License-Identifier: Apache-2.0
 
-Private contract inputs and acceptance evidence outside this Skill
-directory are not part of the public distribution or this license grant.
+See LICENSE and license-map.json for file boundaries and LICENSES/ for the
+unaltered standard legal texts. These are separate licenses by file.
+
+assets/icon.svg was newly drawn for this project using simple SVG paths.
+The original source package's icon of unverified provenance is excluded.
+Public demonstration data is fictional. Private contracts and internal
+acceptance evidence are not part of this distribution.

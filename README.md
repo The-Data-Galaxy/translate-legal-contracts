@@ -1,86 +1,76 @@
-# 合同双语翻译
+# 合同双语翻译 Skill
 
-把合同制作成逐条对照、可编辑的双语Word，关注法律含义、原文保留、自动编号、目录和英文11 pt。使用规则见[SKILL.md](SKILL.md)。
+**从一份合同，到逐条可核对的双语 Word。**
 
-**署名：朱玲凤。许可：[GNU AGPLv3](LICENSE)（`AGPL-3.0-only`）。** [版权及例外说明](COPYRIGHT)。
+面向律师、法务和跨境业务团队，把中文或英文合同整理成原文与译文对应、可以继续修改的 Word。翻译完成后，按流程核对金额、期限、条件与例外，并检查编号、表格和分页，方便你继续审阅、讨论和修改。
 
-**版本：v0.1.1，早期公开版本，正式路径整改与一轮复测通过。** 格式处理已进入共享代码与正式compose入口，16项小型回归通过；从既有猎头原件和冻结译文直接重新生成21页，输出未打任务专用补丁，21页与已验收成品RGB像素完全一致。未验证宿主安装发现、跨宿主兼容或独立法律准确性。
+[下载 v0.1.2](https://github.com/The-Data-Galaxy/translate-legal-contracts/releases/tag/v0.1.2) · [看本次实际输出](docs/demo/bilingual.docx) · [反馈问题](https://github.com/The-Data-Galaxy/translate-legal-contracts/issues)
 
-## 能力边界
+署名：**朱玲凤**。文本与演示素材 **CC BY 4.0**，代码与机器配置 **Apache-2.0**。[许可范围](LICENSE)
 
-| 对象 | 实际能力 |
+## 它适合做什么
+
+- **准备双语审阅稿。** 将中文合同译成英文，或将英文合同译成中文，把原文和对应译文放在一起核对。
+- **整理已有译文。** 检查定义词、条款引用、金额和期限是否一致，区分忠实翻译与另行提出的修改建议。
+- **完成 Word 交付。** 默认中文在前、英文紧随对应条款，保留原件与原文格式，英文统一11 pt；按实际文档处理表格、签署区和页码。
+
+它依赖宿主 Agent 的语言能力和文档处理工具。附带的 Python 工具负责受限 DOCX 的生成与结构核查，本身不自动翻译。
+
+## 怎么开始使用
+
+1. **下载并安装。** 解压发布包，把整个 `translate-legal-contracts` 文件夹放入宿主识别的 Skill 目录。Codex 常见路径为 `~/.codex/skills/translate-legal-contracts/`；已有同名版本时先保留备份，再按宿主方式重新加载。不同宿主的安装和发现机制需分别核实，本项目尚未完成逐宿主安装发现验证。
+2. **准备原件。** 优先提供可编辑的 `.docx`，同时说明目标语言、已有标准译名和交付用途。PDF 或扫描件需要额外识别和重建，不能承诺保留原生 Word 结构。
+3. **附上文件并发出要求。** 在支持文件工具的 Agent 中调用本 Skill。使用辅助 Python 工具时需要 Python 3.10+ 与 lxml；具体配置见[命令行说明](docs/cli.md)。
+
+可以直接复制这段话：
+
+> 请使用 $translate-legal-contracts，把附件做成中英文对照 Word，供双方逐条核对。保留原文和各级条款编号，英文统一11 pt；核对金额、期限、条件、例外和条款引用，并检查所有页面。原文矛盾或不确定的术语请单独说明，不要暗中改写合同。
+
+有指定译名时再补充，例如：“甲方统一译为 Client，乙方统一译为 Service Provider”。用户提供的格式要求优先于默认格式。
+
+## 一次任务会怎样完成
+
+例如，你要把一份中文人才推荐服务协议发给境外合作方核对。
+
+| 步骤 | 你怎么做 | Skill 如何处理，你会看到什么 |
+| --- | --- | --- |
+| 1 准备输入 | 附上合同，说明“做成中英对照，供双方核对”及标准译名 | 读取正文、表格、附件和特殊结构；只有影响处理的关键缺口才追问 |
+| 2 建立对应 | 无需手动拆分条款；有新增译名可随时补充 | 按来源位置组织原文和译文，核对定义、数字、条件与例外；发现原文矛盾时保留并提示 |
+| 3 生成 Word | 如有指定模板或左右栏要求，在生成前说明 | 生成可编辑双语稿，保留原件，处理英文字号、编号和表格；复杂结构按文档工具路径处理 |
+| 4 检查交付 | 查看最终文件及简短核查说明 | 分别检查含义、完整性和实际页面；明确列出未完成的检查或待确认项 |
+| 5 人工复核与调整 | 核对关键交易条款，反馈“第2条统一术语”等具体要求 | 按反馈修订并检查受影响内容；忠实译文与法律修改建议分别处理 |
+
+最终交付以你要求的文件为准。默认是一份双语 `.docx`；有实质疑问时附位置和影响说明，无实质问题时不额外堆砌报告。对外发送或签署前仍需人工复核。
+
+## 看一次实际运行
+
+下面是 **2026-11-14 实际生成的 Word 渲染截图**，不是效果图。输入是一份公开虚构的短协议，包含服务费、付款期限、书面异议例外、表格和签署区。
+
+本次从新建原件经正式 `inspect → compose → audit` 路径运行：**14个来源块全部对应、1张表、结构核查通过、0条数字差异警告，原件未改变，成品没有另打补丁。** 原件和双语稿各渲染1页，均已查看。
+
+<img src="docs/demo/bilingual-page-1.png" width="680" alt="本次实际生成的双语Word页面，显示中文原文、对应英文、付款条件及例外、双语表格和签署区；全部为虚构演示数据" />
+
+[查看原件截图](docs/demo/source-page-1.png) · [下载虚构原件](docs/demo/source.docx) · [下载本次双语稿](docs/demo/bilingual.docx) · [运行记录及复跑方法](docs/demo/README.md)
+
+这次还按原文核对了人民币12,000元、正式入职后才收取服务费、有效发票后10个工作日付款，以及已书面提出异议的金额例外。示例中的译文由本次 Agent 填写后冻结；复跑脚本使用这份固定译文，不调用翻译模型。它展示一次实际生成和核查结果，不代表所有合同或翻译模型的准确率。
+
+## 处理边界与反馈
+
+自动目录、修订、批注、文本框、扫描件等需要额外的文档处理能力。简单构建器拒绝某种结构时，不能删除保护后强行生成；按[Skill规则](SKILL.md)选择适当路径。结构检查通过不能代替语义或逐页视觉检查；缺少排版引擎时应明确说明视觉未验收。
+
+使用步骤见上方；开发者和高级用户可读[命令行说明](docs/cli.md)、[布局计划](references/layout-plan.md)、[测试范围](TESTS.md)及[版本记录](CHANGELOG.md)。既有16项回归与正式路径验证保留，本次只新增一个公开演示用例，未宣称跨宿主兼容或独立法律准确性认证。
+
+反馈请提供版本、脱敏最小输入、预期结果和实际现象，通过 [Issues](https://github.com/The-Data-Galaxy/translate-legal-contracts/issues) 提交。真实合同、签名、账号和内部备注不应放进公开 Issue。
+
+## 署名与许可
+
+Copyright © 2026 **朱玲凤**。
+
+| 文件类别 | 许可证 |
 | --- | --- |
-| Skill指令 | 指导支持文件工具的Agent执行中译英、英译中、双语排版与修复；需要宿主自身的语言与文档处理能力 |
-| `contract_docx.py inspect` | 清点DOCX段落/部件和复杂特征，提供翻译映射起点 |
-| `build` | 把已经填写的英文译文插入原文后，适用于受限简单DOCX；不调用模型、不自动翻译 |
-| `compose` | 在源版本绑定的布局计划下，复用共享格式助手处理表格布局；额外支持受限页眉页脚PAGE/NUMPAGES域，其他复杂结构仍拒绝 |
-| `audit` | 检查原文/译文对应、段落属性、解析器支持的继承编号及译文直接11 pt等；不判断法律含义或视觉质量 |
+| Skill指令、说明文档、SVG及公开虚构演示内容、文档和截图 | [CC BY 4.0](LICENSES/CC-BY-4.0.txt) |
+| Python代码、测试、宿主配置、依赖和其他机器配置 | [Apache-2.0](LICENSES/Apache-2.0.txt) |
 
-默认中文在前、英文紧随，保留原件及原中文格式。英译中、左右栏、复杂域/自动目录、修订、批注、文本框、插图等需按Skill改走宿主文档工具。构建器拒绝复杂结构时，不删除保护绕过。显示编号须先经实际排版引擎核对，脚本不计算Word最终显示值。
+这是按文件分别授权，具体范围见 [LICENSE](LICENSE) 和[逐文件映射](license-map.json)。使用或再分发时按相应许可保留署名、许可及修改说明；不表示作者为衍生项目背书。用户自己的合同和翻译成果不会因使用本 Skill 自动转为上述许可。
 
-## 安装与调用
-
-下载发布包后，将整个`translate-legal-contracts`文件夹放入宿主支持的Skill目录。Codex常用目录为`~/.codex/skills/translate-legal-contracts/`；已有同名目录时先确认版本，不直接合并覆盖。本版本尚未进行宿主安装/发现验证，其他宿主的安装方式及配置字段支持需分别核实。
-
-示例请求：
-
-> 请使用 $translate-legal-contracts 把这份合同做成中英文对照Word，保留原文和编号，英文11 pt；核对金额、条件和例外，并检查最终版式。
-
-## 单独运行辅助脚本
-
-需要Python 3.10+与lxml。在本文件所在目录执行以下命令；确认`python3 --version`满足要求，不满足时换用实际安装的兼容解释器。
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python scripts/contract_docx.py inspect source.docx --out inventory.json
-```
-
-将`inventory.json`中的`translation_template`对象另存为`translations.json`，保留源哈希、id与source_text，填写英文translation；对自动编号填已核验的display_number。它不是把inventory.json整个对象直接当翻译映射。
-
-```bash
-.venv/bin/python scripts/contract_docx.py build source.docx --translations translations.json --out bilingual.docx --manifest alignment.json
-.venv/bin/python scripts/contract_docx.py audit bilingual.docx --manifest alignment.json --out audit.json
-```
-
-涉及关键小表整体分页、长表表头/行分页安排，或页眉页脚页码域时，按[布局计划](references/layout-plan.md)准备layout-plan及字段槽，使用正式路径：
-
-```bash
-.venv/bin/python scripts/contract_docx.py compose source.docx --translations translations.json --layout-plan layout-plan.json --out bilingual.docx --manifest alignment.json
-```
-
-build仍拒绝所有复杂特征；compose也不处理TOC、正文域、修订/批注或图形对象。关键小表必须由当前文档的语义块定位，不能固定某章某页；长表保持流动。布局计划是声明的输入，生成后另打专用补丁不算Skill路径复测通过。
-
-全部输入、DOCX输出、manifest和审计输出使用不同文件路径。路径保护会拒绝覆盖输入和输出间碰撞，包括已有文件的符号链接/硬链接别名；不抵御其他进程在检查与写入间恶意更换文件。已有独立输出可能被重写，需保留需用的历史版本。
-
-退出码：0表示该命令完成；audit返回1表示结构检查失败；输入/路径等已处理错误返回2。inspect报告复杂特征不代表已构建；audit为0也不代表数字警告已解决、全文语义正确或页面已验收。原包manifest schema_version=1及字段保持兼容；缺少有效原始manifest时不声称已核验。
-
-## 可运行的最小演示与回归
-
-正常构建/核查演示使用临时合成Word，无需客户文件：
-
-```bash
-.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
-```
-
-固定16项行为及结果范围见[TESTS.md](TESTS.md)、[EVAL.md](EVAL.md)和[benchmark记录](benchmark/README.md)。测试自动删除临时文件，不产生可对外签署的合同。
-
-一个仅供说明的虚构片段：
-
-> 原文：甲方应支付人民币100元；但对已书面提出争议的金额除外。
->
-> 译文：Party A shall pay CNY 100, except for any amount disputed in writing.
-
-实际任务仍须按上下文检查定义、条件与救济。此片段不是已通过完整合同翻译/视觉验收的展示案例。
-
-## 验收、反馈及许可
-
-交付前分别完成逐条语义复核、全部内容与结构覆盖、最终逐页渲染检查；环境缺少引擎时披露视觉未验收，不用脚本通过替代。渲染工具使用方式遵循当前宿主指南，本项目不硬编码私有工具路径。不得把真实合同、签字或内部备注放入公开Issue/样例。
-
-反馈提供版本、脱敏最小输入、预期与实际行为及错误码；先复现，再补负/正对照回归。请提交到[GitHub Issues](https://github.com/The-Data-Galaxy/translate-legal-contracts/issues)。发布资产见[v0.1.1](https://github.com/The-Data-Galaxy/translate-legal-contracts/releases/tag/v0.1.1)。
-
-署名朱玲凤，按用户2026-11-13决定采用AGPL，当前落实为AGPLv3（`AGPL-3.0-only`）；[LICENSE](LICENSE)原文来源于[GNU官方文本](https://www.gnu.org/licenses/agpl-3.0.txt)，未经改写。`assets/icon.svg`为本轮新绘制的简单SVG路径，不包含来源未确认的旧图标。[CHANGELOG.md](CHANGELOG.md)记录版本改动。
-
-0.1.1已从同一原件、冻结译文与声明的布局计划，通过发布资源中的compose命令直接生成：139个来源块、3个表格、动态页码域，21页全部与此前已查看并验收的成品RGB像素完全一致；输出补丁为0，未调用旧任务专用构建/修复脚本。执行与复核为同一Agent，本轮只复测格式路径，不重新声称独立翻译准确率。
-
-本例不含自动编号、目录、修订或批注；相应能力不能据此宣称已完成真实文档验收。合同和内部证据保留于开发工作区，不随开源包分发。公开回归使用tests/内的合成数据。
+v0.1.2 起采用上述许可安排；此前 v0.1.1 的 AGPL 发布包保留原样，不撤回已授予的许可。两份标准许可全文保留官方原文。

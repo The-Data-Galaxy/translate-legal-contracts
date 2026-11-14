@@ -1,0 +1,11 @@
+{
+  "source_sha256": "67a547c9a296b7118ff53dfcb054804f0b0866df36bc8ab264315b998f05547b",
+  "tables": [
+    {
+      "table_index": 0,
+      "policy": "flow",
+      "repeat_header_rows": 1,
+      "prevent_row_split": true
+    }
+  ]
+}

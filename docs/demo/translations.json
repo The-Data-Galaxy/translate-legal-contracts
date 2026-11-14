@@ -1,0 +1,103 @@
+{
+  "source_sha256": "67a547c9a296b7118ff53dfcb054804f0b0866df36bc8ab264315b998f05547b",
+  "blocks": [
+    {
+      "id": "b000001",
+      "source_text": "人才推荐服务协议演示样例",
+      "translation": "Talent Referral Services Agreement Demonstration",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000002",
+      "source_text": "虚构数据 仅供演示 不用于签署",
+      "translation": "Fictional data for demonstration only. Not for execution.",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000003",
+      "source_text": "甲方：示例科技有限公司",
+      "translation": "Party A: Example Technology Co., Ltd.",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000004",
+      "source_text": "乙方：示例人才服务有限公司",
+      "translation": "Party B: Example Talent Services Co., Ltd.",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000005",
+      "source_text": "一 服务与费用",
+      "translation": "I Services and Fees",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000006",
+      "source_text": "1. 乙方向甲方推荐候选人。服务费为人民币12,000元，仅在候选人正式入职后收取。",
+      "translation": "1. Party B shall refer candidates to Party A. A service fee of CNY 12,000 shall be payable only after the candidate commences employment.",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000007",
+      "source_text": "2. 甲方应在收到有效发票后10个工作日内付款，但已书面提出异议的金额除外。",
+      "translation": "2. Party A shall pay within 10 business days after receiving a valid invoice, except for any amount disputed in writing.",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000008",
+      "source_text": "事项",
+      "translation": "Item",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000009",
+      "source_text": "约定",
+      "translation": "Terms",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000010",
+      "source_text": "付款期限",
+      "translation": "Payment period",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000011",
+      "source_text": "收到有效发票后10个工作日内",
+      "translation": "Within 10 business days after receiving a valid invoice",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000012",
+      "source_text": "争议金额",
+      "translation": "Disputed amount",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000013",
+      "source_text": "书面提出异议的部分暂缓支付",
+      "translation": "Payment of any portion disputed in writing shall be deferred",
+      "display_number": null,
+      "action": "translate"
+    },
+    {
+      "id": "b000014",
+      "source_text": "甲方签署：________    乙方签署：________",
+      "translation": "Signed for Party A: ________    Signed for Party B: ________",
+      "display_number": null,
+      "action": "translate"
+    }
+  ]
+}
