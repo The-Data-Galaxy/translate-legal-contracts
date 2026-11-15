@@ -25,6 +25,8 @@ init只能在尚无账本时使用；run/review不能增加预算。没有外部
 
 run返回output、manifest、audit、pages_dir及page_count；状态visual_pending表示还未验收。逐页实际查看页图，核对文字、字号、断表、页码、空白及签署区。然后记录实际查看范围：
 
+返回的`target_language_review_required`和`target_language_findings`来自该版本audit，缓存也透传。英文目标残留中文时，先按名称处理规则逐项纠正或在单独说明中交代位置、保留理由和确认状态；不能只看结构/视觉状态便宣称全文已译完。合理保留也会提示，人工说明并不由脚本自动核实；旧audit没有此字段表示尚未扫描。
+
 ```bash
 python scripts/contract_run.py review source.docx --pages 1-21 --verdict pass --note '全部21页已实际查看；收款表及签署区完整，无缺字遮挡'
 ```

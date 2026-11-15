@@ -24,6 +24,7 @@ NS = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
 W = '{' + NS['w'] + '}'
 STORY = re.compile(r'word/(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$')
 NUMBER = re.compile(r'(?<![A-Za-z])\d+(?:[,.]\d+)*(?:%|％)?')
+HAN = re.compile(r'[\u3007\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\U00020000-\U0002fa1f]+')
 
 
 def parse(data):
@@ -366,7 +367,7 @@ def audit(path, manifest_path):
                 name = mark.get(W + 'name', '')
                 if name.startswith(('stcSrc_', 'stcDst_')):
                     found.setdefault(name, []).append((part, p))
-    errors, warnings, retained = [], [], []
+    errors, warnings, retained, language_findings = [], [], [], []
     if (manifest.get('generated_layout_sha256') is not None and
             layout_hash(roots) != manifest['generated_layout_sha256']):
         errors.append('Generated layout changed after composition; regenerate through the formal input plan')
@@ -396,6 +397,20 @@ def audit(path, manifest_path):
             errors.append(b['id'] + ': translation is not adjacent to its source')
         if ptext(tp) != b['target_text']:
             errors.append(b['id'] + ': translation or displayed list label changed')
+        # Inspect the actual target, not the supplied translation or action label.
+        # Legitimate names/quotations also remain visible for a human decision.
+        actual_target = ptext(tp)
+        fragments = HAN.findall(actual_target)
+        if fragments:
+            finding = {'id': b['id'], 'part': dpart,
+                       'source_paragraph_index': b['paragraph_index'],
+                       'code': 'CHINESE_IN_ENGLISH_TARGET',
+                       'issue': 'Review Chinese in the English target; explain any retained name or quotation',
+                       'target': actual_target, 'chinese_fragments': fragments,
+                       'copies_entire_source': actual_target.strip() == b['source_text'].strip(),
+                       'requires_manual_review': True}
+            language_findings.append(finding)
+            warnings.append(finding)
         if value(tp, 'w:pPr/w:numPr/w:numId') != '0':
             errors.append(b['id'] + ': translation can advance the original numbering')
         for run in tp.findall('.//w:r', NS):
@@ -407,6 +422,8 @@ def audit(path, manifest_path):
             warnings.append({'id': b['id'], 'issue': 'Numeric tokens differ; check units, dates and amounts',
                              'source': dict(a), 'translation': dict(z), 'review': b.get('numeric_review')})
     return {'structural_pass': not errors, 'errors': errors, 'warnings': warnings,
+            'target_language_review_required': bool(language_findings),
+            'target_language_findings': language_findings,
             'retained_items': retained, 'semantic_review': 'not_automated', 'visual_review': 'not_automated'}
 
 

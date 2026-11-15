@@ -123,6 +123,11 @@ def summary(folder, data, entry=None, cached=False):
         result.update(output=str(out / 'bilingual.docx'), manifest=str(out / 'alignment.json'),
                       audit=str(out / 'audit.json'), pages_dir=str(out / 'pages'),
                       page_count=entry.get('page_count', 0), findings=entry.get('findings', []))
+        if (out / 'audit.json').is_file():
+            report = json.loads((out / 'audit.json').read_text(encoding='utf-8'))
+            # Missing on legacy reports means not scanned, not a clean result.
+            result.update(target_language_review_required=report.get('target_language_review_required'),
+                          target_language_findings=report.get('target_language_findings', []))
     return result
 
 

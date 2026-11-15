@@ -1,6 +1,6 @@
 # 命令行辅助工具
 
-v0.1.3普通宿主任务优先用[统一执行入口](../references/execution.md)完成生成、audit、受预算控制渲染和逐页检查记录；下文build/compose/audit保留为底层接口及回归用法，不管理渲染次数。
+candidate.3普通宿主任务优先用[统一执行入口](../references/execution.md)完成生成、audit、受预算控制渲染和逐页检查记录；下文build/compose/audit保留为底层接口及回归用法，不管理渲染次数。
 
 本页面向希望单独运行Python工具的使用者。[用户入口与完整旅程](../README.md)。辅助工具不调用模型，译文需先由Agent或使用者填写。
 
@@ -16,9 +16,11 @@ v0.1.3普通宿主任务优先用[统一执行入口](../references/execution.md
 
 默认中文在前、英文紧随，保留原件及原中文格式。英译中、左右栏、复杂域/自动目录、修订、批注、文本框、插图等需按Skill改走宿主文档工具。构建器拒绝复杂结构时，不删除保护绕过。显示编号须先经实际排版引擎核对，脚本不计算Word最终显示值。
 
+名称检查（v0.1.4）：`audit`另返回`target_language_review_required`和`target_language_findings`，定位实际英文段落中的中文及原文整段复制。它们是人工核查提示，不自动判定漏译、名称准确或已确认；合法保留登记户名也会列出。统一入口摘要及缓存保留同一提示。旧报告缺少字段表示未扫描；`structural_pass`或视觉`complete`不能代替逐项处理和披露。
+
 ## 安装与调用补充
 
-下载发布包后，将整个`translate-legal-contracts`文件夹放入宿主支持的Skill目录。Codex常用目录为`~/.codex/skills/translate-legal-contracts/`；已有同名目录时先确认版本，不直接合并覆盖。本版隔离候选已在macOS WorkBuddy通过技能菜单调用；其他宿主的安装与配置需分别核实。统一执行入口使用Unix文件锁，支持macOS/Linux；Windows原生尚未支持此入口。
+下载发布包后，将整个`translate-legal-contracts`文件夹放入宿主支持的Skill目录。Codex常用目录为`~/.codex/skills/translate-legal-contracts/`；已有同名目录时先确认版本，不直接合并覆盖。本版本尚未进行宿主安装/发现验证，其他宿主的安装方式及配置字段支持需分别核实。
 
 示例请求：
 
